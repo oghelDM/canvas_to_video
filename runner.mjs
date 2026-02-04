@@ -89,23 +89,30 @@ async function runCreative(campaignConfig, recordDurationMs = 5000) {
 
 	console.log("Extracting video data...");
 
-	const videoData = await page.evaluate(() => {
+	let fileExtension = "webm";
+	const result = await page.evaluate(() => {
 		console.log("__videoReady:", window.__videoReady);
 		console.log("__videoBuffer size:", window.__videoBuffer?.length);
+		console.log("__fileExtension:", window.__fileExtension);
+
 		if (window.__videoBuffer) {
-			return Array.from(window.__videoBuffer);
+			return {
+				videoData: Array.from(window.__videoBuffer),
+				fileExtension: window.__fileExtension || "webm",
+			};
 		}
 		return null;
 	});
 
 	console.log(
 		"Got video data:",
-		videoData ? `${videoData.length} bytes` : "null",
+		result ? `${result.videoData.length} bytes` : "null",
 	);
 
-	if (videoData) {
-		const buffer = Buffer.from(videoData);
-		const outputPath = join(__dirname, "output.webm");
+	if (result) {
+		const buffer = Buffer.from(result.videoData);
+		const fileExtension = result.fileExtension;
+		const outputPath = join(__dirname, "output." + fileExtension);
 		writeFileSync(outputPath, buffer);
 		console.log(`✅ Video saved to: ${outputPath}`);
 		console.log(`   Size: ${(buffer.length / 1024 / 1024).toFixed(2)} MB`);

@@ -245,9 +245,15 @@ export class MyCreative {
 		console.log("Video tracks:", canvasStream.getVideoTracks().length);
 
 		const options = {
-			mimeType: "video/webm; codecs=vp9",
+			mimeType: "video/mp4; codecs=avc1",
 		};
+		window.__fileExtension = "mp4";
 
+		if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+			console.warn("MP4 not supported!");
+			options.mimeType = "video/webm; codecs=vp9"; // Fallback
+			window.__fileExtension = "webm";
+		}
 		// Check if codec is supported
 		if (!MediaRecorder.isTypeSupported(options.mimeType)) {
 			console.warn("vp9 not supported, trying vp8...");
@@ -257,8 +263,6 @@ export class MyCreative {
 			console.warn("vp8 not supported, using default...");
 			options.mimeType = "video/webm";
 		}
-
-		console.log("Using mimeType:", options.mimeType);
 
 		this.recordedChunks = [];
 		this.mediaRecorder = new MediaRecorder(canvasStream, options);
