@@ -1,19 +1,6 @@
-import {
-	Block,
-	PROPERTY,
-	Campaign,
-	BlockText,
-	PropsBase,
-	Animation,
-	BLOCK_TYPE,
-	BlockImage,
-	BlockVideo,
-	PropsVideo,
-	PropsAudio,
-	defaultPropertyValues,
-} from "./types.mjs";
-import { getEasingFunction } from "./easing.mts";
-import { map } from "./helper.mts";
+import { PROPERTY, BLOCK_TYPE, defaultPropertyValues } from "./types.mjs";
+import { getEasingFunction } from "./easing.mjs";
+import { map } from "./helper.mjs";
 
 export class MyCreative {
 	canvas;
@@ -23,7 +10,7 @@ export class MyCreative {
 	// TODO: add this to the existing VideoBlock or smth
 	secondaryVideos = {};
 
-	mediaRecorde;
+	mediaRecorder;
 	// store the images' HTMLImageElement (no duplicate)
 	// TODO: add this to the existing ImageBlock or smth
 	images = {};
@@ -36,21 +23,26 @@ export class MyCreative {
 	// audio management
 	audioContext;
 	audioDestination; // where each audio track is added
+	recordDuration;
 
-	constructor(_campaign) {
+	constructor(_campaign, recordDuration = 5000) {
 		this.campaign = _campaign;
+		this.recordDuration = recordDuration;
 
 		this.mainVideo = document.createElement("video");
 		this.mainVideo.crossOrigin = "anonymous";
 		this.mainVideo.muted = true;
 		this.mainVideo.playsInline = true;
 
+		// debugging
+		document.body.appendChild(this.mainVideo);
+
 		this.setupCanvas();
 	}
 
 	setupCanvas = () => {
 		this.canvas = document.createElement("canvas");
-		// this.root.parentElement?.appendChild(this.canvas);
+		document.body.appendChild(this.canvas);
 
 		const ctx = this.canvas.getContext("2d");
 		if (!ctx) {
@@ -214,7 +206,8 @@ export class MyCreative {
 		);
 
 		// Use mixed audio instead of just main video
-		const canvasStream = this.canvas.captureStream();
+		const canvasStream = this.canvas.captureStream(30); // 30 FPS
+		console.log("Canvas stream created at 30 FPS");
 		const mixedAudioTrack =
 			this.audioDestination.stream.getAudioTracks()[0];
 		canvasStream.addTrack(mixedAudioTrack);
@@ -240,22 +233,77 @@ export class MyCreative {
 		);
 		fonts.forEach((font) => document.fonts.add(font));
 
+		// In setupCampaign, replace the MediaRecorder section with:
+
+		console.log("Setting up MediaRecorder...");
+		console.log("Canvas stream tracks:", canvasStream.getTracks());
+		console.log("Audio tracks:", canvasStream.getAudioTracks().length);
+		console.log("Video tracks:", canvasStream.getVideoTracks().length);
+
 		const options = {
-			// mimeType: "video/mp4",
 			mimeType: "video/webm; codecs=vp9",
-			// mimeType: "video/mp4; codecs=avc1.424028, mp4a.40.2",
 		};
+
+		// Check if codec is supported
+		if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+			console.warn("vp9 not supported, trying vp8...");
+			options.mimeType = "video/webm; codecs=vp8";
+		}
+		if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+			console.warn("vp8 not supported, using default...");
+			options.mimeType = "video/webm";
+		}
+
+		console.log("Using mimeType:", options.mimeType);
 
 		this.recordedChunks = [];
 		this.mediaRecorder = new MediaRecorder(canvasStream, options);
 
+		this.mediaRecorder.onstart = () => {
+			console.log("✅ MediaRecorder STARTED");
+		};
+
 		this.mediaRecorder.ondataavailable = (e) => {
+			console.log("📦 Data chunk received:", e.data.size, "bytes");
 			if (e.data.size > 0) {
 				this.recordedChunks.push(e.data);
 			}
 		};
-		this.mediaRecorder.onstop = () => this.download();
-		this.mediaRecorder.start();
+
+		this.mediaRecorder.onstop = () => {
+			console.log("⏹️  MediaRecorder STOPPED");
+			console.log("Total chunks:", this.recordedChunks.length);
+			this.download();
+		};
+
+		this.mediaRecorder.onerror = (e) => {
+			console.error("❌ MediaRecorder ERROR:", e);
+		};
+
+		console.log("Starting MediaRecorder...");
+		this.mediaRecorder.start(100); // Capture data every 100ms
+
+		console.log("MediaRecorder state:", this.mediaRecorder.state);
+		console.log("Setting timeout for", this.recordDuration, "ms");
+
+		this.recordingTimeout = window.setTimeout(() => {
+			console.log("⏰ TIMEOUT FIRED!");
+			console.log("MediaRecorder state:", this.mediaRecorder?.state);
+			if (
+				this.mediaRecorder &&
+				this.mediaRecorder.state === "recording"
+			) {
+				console.log("Stopping recorder...");
+				this.mediaRecorder.stop();
+			} else {
+				console.log(
+					"Recorder is not recording! State:",
+					this.mediaRecorder?.state,
+				);
+			}
+		}, this.recordDuration || 5000);
+
+		console.log("Timeout set, will fire in", this.recordDuration, "ms");
 
 		this.isLoading = false;
 		if (this.raf == null) {
@@ -325,14 +373,28 @@ export class MyCreative {
 		});
 	};
 
-	download = () => {
+	download = async () => {
+		console.log("Download called!");
+		console.log("Recorded chunks:", this.recordedChunks.length);
+
+		if (this.recordedChunks.length === 0) {
+			console.error("❌ No chunks recorded!");
+			return;
+		}
+
 		const blob = new Blob([...this.recordedChunks], { type: "video/webm" });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = "POC_CanvasToVideo.webm";
-		a.click();
-		URL.revokeObjectURL(url);
+		console.log("Blob size:", blob.size, "bytes");
+
+		const buffer = await blob.arrayBuffer();
+
+		window.__videoBuffer = new Uint8Array(buffer);
+		window.__videoReady = true;
+
+		console.log(
+			"✅ Video ready for download, size:",
+			buffer.byteLength,
+			"bytes",
+		);
 	};
 
 	getValue = (props, property) => {

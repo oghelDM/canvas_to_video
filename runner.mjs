@@ -1,27 +1,30 @@
 import puppeteer from "puppeteer";
-import { readFileSync, writeFileSync } from "fs";
+import { writeFileSync, readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { PROPERTY, BLOCK_TYPE, EASING } from "./types.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-async function runCreative(campaignConfig) {
-	// Launch browser with necessary flags for video/audio
+async function runCreative(campaignConfig, recordDurationMs = 5000) {
 	const browser = await puppeteer.launch({
-		headless: true, // Set to false to see what's happening
+		headless: false,
+		devtools: true,
 		args: [
 			"--autoplay-policy=no-user-gesture-required",
 			"--use-fake-ui-for-media-stream",
 			"--use-fake-device-for-media-stream",
-			"--disable-web-security", // For CORS if needed
+			"--disable-web-security",
 			"--allow-file-access-from-files",
 		],
 	});
 
 	const page = await browser.newPage();
 
-	// Set viewport to match your campaign dimensions
+	page.on("console", (msg) => console.log("PAGE LOG:", msg.text()));
+	page.on("pageerror", (error) => console.log("PAGE ERROR:", error.message));
+
 	await page.setViewport({
 		width: campaignConfig.scene.width,
 		height: campaignConfig.scene.height,
@@ -29,7 +32,6 @@ async function runCreative(campaignConfig) {
 
 	console.log("Loading page...");
 
-	// Create an HTML page that loads your code
 	const html = `
     <!DOCTYPE html>
     <html>
@@ -42,68 +44,80 @@ async function runCreative(campaignConfig) {
           overflow: hidden;
           background: #000;
         }
-        #container {
-          width: ${campaignConfig.scene.width}px;
-          height: ${campaignConfig.scene.height}px;
+        canvas {
+          display: block;
         }
       </style>
     </head>
     <body>
-      <div id="container"></div>
       <script type="module">
-        // Your campaign configuration
-        const campaign = ${JSON.stringify(campaignConfig)};
-        
-        // Import your creative code
         import { MyCreative } from './toto.mjs';
         
-        // Initialize
-        const creative = new MyCreative(campaign);
+        const campaign = ${JSON.stringify(campaignConfig)};
+        const recordDuration = ${recordDurationMs};
         
-        // Expose for debugging
-        window.creative = creative;
+        console.log('Starting creative...');
+        
+        try {
+          const creative = new MyCreative(campaign, recordDuration);
+          window.creative = creative;
+          
+          creative.setupCampaign(campaign)
+            .then(() => console.log('Campaign started!'))
+            .catch(err => console.error('Setup failed:', err));
+        } catch (err) {
+          console.error('Failed:', err);
+        }
       </script>
     </body>
     </html>
   `;
 
-	// Save HTML temporarily
 	const htmlPath = join(__dirname, "temp.html");
 	writeFileSync(htmlPath, html);
 
-	// Navigate to the page
 	await page.goto(`file://${htmlPath}`, {
-		waitUntil: "networkidle0",
+		waitUntil: "domcontentloaded",
 	});
 
-	console.log("Page loaded, processing video...");
+	console.log("Page loaded!");
 
-	// Wait for video to complete (adjust timeout as needed)
-	await page.waitForFunction(
-		() => {
-			const video = document.querySelector("video");
-			return video && video.ended;
-		},
-		{ timeout: 120000 }, // 2 minutes timeout
+	const waitTime = recordDurationMs + 3000;
+	console.log(`Waiting ${waitTime}ms for recording...`);
+	await new Promise((resolve) => setTimeout(resolve, waitTime));
+
+	console.log("Extracting video data...");
+
+	const videoData = await page.evaluate(() => {
+		console.log("__videoReady:", window.__videoReady);
+		console.log("__videoBuffer size:", window.__videoBuffer?.length);
+		if (window.__videoBuffer) {
+			return Array.from(window.__videoBuffer);
+		}
+		return null;
+	});
+
+	console.log(
+		"Got video data:",
+		videoData ? `${videoData.length} bytes` : "null",
 	);
 
-	console.log("Video processing complete!");
+	if (videoData) {
+		const buffer = Buffer.from(videoData);
+		const outputPath = join(__dirname, "output.webm");
+		writeFileSync(outputPath, buffer);
+		console.log(`✅ Video saved to: ${outputPath}`);
+		console.log(`   Size: ${(buffer.length / 1024 / 1024).toFixed(2)} MB`);
+	} else {
+		console.error("❌ No video data found!");
+	}
 
-	// The download should happen automatically via your code
-	// Or you can capture the blob and save it here:
-
-	await page.evaluate(() => {
-		return new Promise((resolve) => {
-			// Wait a bit for download to trigger
-			setTimeout(resolve, 2000);
-		});
-	});
-
+	console.log("\nClosing browser in 3 seconds...");
+	await new Promise((resolve) => setTimeout(resolve, 3000));
 	await browser.close();
 	console.log("Done!");
 }
 
-// Example campaign configuration
 const campaign = {
 	scene: {
 		width: 1920,
@@ -111,43 +125,20 @@ const campaign = {
 	},
 	blocks: [
 		{
-			type: "video",
+			type: BLOCK_TYPE.video,
+			name: "video",
 			props: {
-				src: "https://example.com/video.mp4",
+				src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
 				isMainVideo: true,
-				width: 1920,
-				height: 1080,
 				x: 0,
 				y: 0,
+				width: 1920,
+				height: 1080,
+				opacity: 1,
 				zIndex: 0,
-				opacity: 1,
-				scale: 1,
-			},
-		},
-		{
-			type: "text",
-			props: {
-				text: "Hello World",
-				fontSize: 72,
-				x: 960,
-				y: 540,
-				zIndex: 1,
-				opacity: 1,
-				scale: 1,
-				animations: [
-					{
-						property: "opacity",
-						startTime: 0,
-						duration: 1000,
-						startValue: 0,
-						endValue: 1,
-						easing: "easeInOut",
-					},
-				],
 			},
 		},
 	],
 };
 
-// Run it
-runCreative(campaign).catch(console.error);
+runCreative(campaign, 5000).catch(console.error);
