@@ -1,10 +1,8 @@
 // https://easings.net/#
 
-import { EASING } from "./types.mts";
+import { EASING } from "./types.mjs";
 
-export function getEasingFunction(
-	easing: EASING | undefined,
-): (_: number) => number {
+export function getEasingFunction(easing, number) {
 	switch (easing) {
 		case EASING.easeIn:
 			return easeInCubic;
@@ -30,25 +28,25 @@ export function getEasingFunction(
 	}
 }
 
-export function linear(x: number): number {
+export function linear(x) {
 	return x;
 }
 
 // CUBIC
-export function easeInCubic(x: number): number {
+export function easeInCubic(x) {
 	return x * x * x;
 }
 
-export function easeOutCubic(x: number): number {
+export function easeOutCubic(x) {
 	return 1 - Math.pow(1 - x, 3);
 }
 
-export function easeInOutCubic(x: number): number {
+export function easeInOutCubic(x) {
 	return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 }
 
 // ELASTIC
-export function easeInElastic(x: number): number {
+export function easeInElastic(x) {
 	const c4 = (2 * Math.PI) / 3;
 	return x === 0
 		? 0
@@ -57,7 +55,7 @@ export function easeInElastic(x: number): number {
 			: -Math.pow(2, 10 * x - 10) * Math.sin((x * 10 - 10.75) * c4);
 }
 
-export function easeOutElastic(x: number): number {
+export function easeOutElastic(x) {
 	const c4 = (2 * Math.PI) / 3;
 	return x === 0
 		? 0
@@ -66,7 +64,7 @@ export function easeOutElastic(x: number): number {
 			: Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
 }
 
-export function easeInOutElastic(x: number): number {
+export function easeInOutElastic(x) {
 	const c5 = (2 * Math.PI) / 4.5;
 	return x === 0
 		? 0
@@ -84,11 +82,11 @@ export function easeInOutElastic(x: number): number {
 }
 
 // BOUNCE
-export function easeInBounce(x: number): number {
+export function easeInBounce(x) {
 	return 1 - easeOutBounce(1 - x);
 }
 
-export function easeOutBounce(x: number): number {
+export function easeOutBounce(x) {
 	const n1 = 7.5625;
 	const d1 = 2.75;
 	if (x < 1 / d1) {
@@ -102,7 +100,7 @@ export function easeOutBounce(x: number): number {
 	}
 }
 
-export function easeInOutBounce(x: number): number {
+export function easeInOutBounce(x) {
 	return x < 0.5
 		? (1 - easeOutBounce(1 - 2 * x)) / 2
 		: (1 + easeOutBounce(2 * x - 1)) / 2;

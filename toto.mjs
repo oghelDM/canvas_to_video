@@ -11,34 +11,33 @@ import {
 	PropsVideo,
 	PropsAudio,
 	defaultPropertyValues,
-} from "./types.mts";
+} from "./types.mjs";
 import { getEasingFunction } from "./easing.mts";
 import { map } from "./helper.mts";
 
 export class MyCreative {
-	private canvas: HTMLCanvasElement | undefined;
-	private ctx: CanvasRenderingContext2D | undefined;
-	private raf: number | undefined;
-	private mainVideo: HTMLVideoElement;
+	canvas;
+	ctx;
+	raf;
+	mainVideo;
 	// TODO: add this to the existing VideoBlock or smth
-	private secondaryVideos: { [src: string]: HTMLVideoElement } = {};
+	secondaryVideos = {};
 
-	private mediaRecorder: MediaRecorder | undefined;
+	mediaRecorde;
 	// store the images' HTMLImageElement (no duplicate)
 	// TODO: add this to the existing ImageBlock or smth
-	private images: { [src: string]: HTMLImageElement } = {};
-	private currTime = 0;
-	private campaign: Campaign | undefined;
-	private recordedChunks: Blob[] = [];
+	images = {};
+	currTime = 0;
+	campaign;
+	recordedChunks = [];
 	// store the fonts' family names
-	private fontNames: { [fontUrl: string]: string } = {};
-	protected gui: any;
-	private isLoading = false;
+	fontNames = {};
+	isLoading = false;
 	// audio management
-	private audioContext: AudioContext | undefined;
-	private audioDestination: MediaStreamAudioDestinationNode | undefined; // where each audio track is added
+	audioContext;
+	audioDestination; // where each audio track is added
 
-	constructor(_campaign: Campaign) {
+	constructor(_campaign) {
 		this.campaign = _campaign;
 
 		this.mainVideo = document.createElement("video");
@@ -49,7 +48,7 @@ export class MyCreative {
 		this.setupCanvas();
 	}
 
-	private setupCanvas = () => {
+	setupCanvas = () => {
 		this.canvas = document.createElement("canvas");
 		// this.root.parentElement?.appendChild(this.canvas);
 
@@ -61,7 +60,7 @@ export class MyCreative {
 		this.ctx = ctx;
 	};
 
-	private cleanup = () => {
+	cleanup = () => {
 		this.currTime = 0;
 		this.raf = undefined;
 
@@ -94,7 +93,7 @@ export class MyCreative {
 		}
 	};
 
-	private setupCampaign = async (campaign: Campaign) => {
+	setupCampaign = async (campaign) => {
 		console.log("setupCampaign: ", campaign);
 
 		this.isLoading = true;
@@ -112,7 +111,7 @@ export class MyCreative {
 		// Load images
 		const imageBlocks = blocks.filter(
 			({ type }) => type === BLOCK_TYPE.image,
-		) as BlockImage[];
+		);
 		await Promise.all(
 			imageBlocks.map(({ props }) => {
 				const { src } = props;
@@ -120,7 +119,7 @@ export class MyCreative {
 				img.crossOrigin = "anonymous";
 				img.src = src;
 				this.images[src] = img;
-				return new Promise<void>((res) => {
+				return new Promise((res) => {
 					img.onload = () => res();
 					img.onerror = () => {
 						console.log(`image not loaded: ${src}`);
@@ -156,7 +155,7 @@ export class MyCreative {
 		this.mainVideo.muted = false; // Keep unmuted for mixing
 		const mainSource = this.audioContext.createMediaStreamSource(
 			// TODO
-			(this.mainVideo as any).captureStream(),
+			this.mainVideo.captureStream(),
 		);
 
 		// Add main video volume control
@@ -177,12 +176,12 @@ export class MyCreative {
 					video.src = src;
 					this.secondaryVideos[src] = video;
 
-					return new Promise<void>((resolve, reject) => {
+					return new Promise((resolve, reject) => {
 						video.onloadeddata = () => {
 							// Create audio source and gain for this video
 							const source =
 								this.audioContext?.createMediaStreamSource(
-									(video as any).captureStream(),
+									video.captureStream(),
 								);
 							if (!source) {
 								console.log("no source");
@@ -195,9 +194,7 @@ export class MyCreative {
 							}
 							gain.gain.value = volume;
 							// TODO
-							source
-								.connect(gain)
-								.connect(this.audioDestination as AudioNode);
+							source.connect(gain).connect(this.audioDestination);
 
 							video.currentTime = Math.max(
 								0,
@@ -223,20 +220,17 @@ export class MyCreative {
 		canvasStream.addTrack(mixedAudioTrack);
 
 		// font loading
-		const fonts: FontFace[] = [];
+		const fonts = [];
 		await Promise.all(
 			blocks
 				.filter(({ type }) => type === BLOCK_TYPE.text)
-				.filter((block) => !!(block as BlockText).props.fontUrl)
+				.filter((block) => !!block.props.fontUrl)
 				.filter(
 					(block) =>
-						!this.fontNames.hasOwnProperty(
-							(block as BlockText).props.fontUrl as string,
-						),
+						!this.fontNames.hasOwnProperty(block.props.fontUrl),
 				)
 				.map((block, i) => {
-					const fontUrl = (block as BlockText).props
-						.fontUrl as string;
+					const fontUrl = block.props.fontUrl;
 					const fontFamilyName = `CustomFont-${i}`;
 					const font = new FontFace(fontFamilyName, fontUrl);
 					fonts.push(font);
@@ -269,12 +263,7 @@ export class MyCreative {
 		}
 	};
 
-	private getAllVideos = (
-		blocks: Block[],
-	): {
-		mainVideoBlock: BlockVideo | undefined;
-		secondaryVideoBlocks: BlockVideo[];
-	} => {
+	getAllVideos = (blocks) => {
 		const allVideos = blocks.filter(
 			(block) => block.type === BLOCK_TYPE.video,
 		);
@@ -285,34 +274,34 @@ export class MyCreative {
 		}
 		if (allVideos.length === 1) {
 			return {
-				mainVideoBlock: allVideos[0] as BlockVideo,
+				mainVideoBlock: allVideos[0],
 				secondaryVideoBlocks: [],
 			};
 		}
 		const mainVideoBlock = allVideos.find(
-			(videoBlock) => (videoBlock as BlockVideo).props.isMainVideo,
+			(videoBlock) => videoBlock.props.isMainVideo,
 		);
 		if (!mainVideoBlock) {
 			console.log("no main video was found");
 			return { mainVideoBlock: undefined, secondaryVideoBlocks: [] };
 		}
 		const secondaryVideoBlocks = allVideos.filter(
-			(videoBlock) => !(videoBlock as BlockVideo).props.isMainVideo,
-		) as BlockVideo[];
+			(videoBlock) => !videoBlock.props.isMainVideo,
+		);
 		return {
-			mainVideoBlock: mainVideoBlock as BlockVideo,
+			mainVideoBlock: mainVideoBlock,
 			secondaryVideoBlocks,
 		};
 	};
 
-	private setupAnimations = (campaign: Campaign) => {
+	setupAnimations = (campaign) => {
 		const { blocks } = campaign;
 
 		blocks.forEach(({ props }) => {
 			if (!props.animations) {
 				return;
 			}
-			const allAnimations: Animation[] = [];
+			const allAnimations = [];
 			props.animations.forEach((animation) => {
 				allAnimations.push({ ...animation, count: 1 });
 				if (animation.count) {
@@ -336,7 +325,7 @@ export class MyCreative {
 		});
 	};
 
-	private download = () => {
+	download = () => {
 		const blob = new Blob([...this.recordedChunks], { type: "video/webm" });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
@@ -346,12 +335,9 @@ export class MyCreative {
 		URL.revokeObjectURL(url);
 	};
 
-	private getValue = (
-		props: PropsBase | PropsVideo | PropsAudio,
-		property: PROPERTY,
-	): number => {
+	getValue = (props, property) => {
 		const defaultValue = props.hasOwnProperty(property)
-			? ((props as any)[property] as number)
+			? props[property]
 			: defaultPropertyValues[property];
 
 		const { animations = [] } = props;
@@ -396,10 +382,10 @@ export class MyCreative {
 		let actualStartValue = defaultValue;
 		if (animation.hasOwnProperty("startValue")) {
 			// use startValue if any
-			actualStartValue = animation.startValue as number;
+			actualStartValue = animation.startValue;
 		} else if (lastAnimation) {
 			// use lastAnimation's endValue if any
-			actualStartValue = lastAnimation.endValue as number;
+			actualStartValue = lastAnimation.endValue;
 		}
 
 		const easing = getEasingFunction(animation.easing);
@@ -411,7 +397,7 @@ export class MyCreative {
 	};
 
 	// TODO: this should not be needed
-	private getVideoElement = (block: BlockVideo): HTMLVideoElement | null => {
+	getVideoElement = (block) => {
 		const { src, isMainVideo } = block.props;
 
 		if (isMainVideo) {
@@ -421,7 +407,7 @@ export class MyCreative {
 		return this.secondaryVideos[src] || null;
 	};
 
-	private syncSecondaryVideos = () => {
+	syncSecondaryVideos = () => {
 		if (!this.campaign) {
 			console.log("no campaign");
 			return;
@@ -448,7 +434,7 @@ export class MyCreative {
 		});
 	};
 
-	private render = (_: number, metadata: VideoFrameCallbackMetadata) => {
+	render = (_, metadata) => {
 		if (this.mainVideo.readyState < 2) {
 			this.raf = this.mainVideo.requestVideoFrameCallback(this.render);
 			return;
@@ -511,9 +497,7 @@ export class MyCreative {
 
 						this.ctx.drawImage(
 							type === BLOCK_TYPE.video
-								? (this.getVideoElement(
-										block,
-									) as HTMLVideoElement)
+								? this.getVideoElement(block)
 								: this.images[src],
 							x,
 							y,
