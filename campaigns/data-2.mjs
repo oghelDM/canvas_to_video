@@ -1,0 +1,201 @@
+import { BLOCK_TYPE, EASING, PROPERTY } from "../types.mjs";
+
+const assetsPrefixUrl =
+	"https://statics.dmcdn.net/d/PRODUCTION/2025/POC_CanvasToVideo/assets/alpine/";
+
+export const campaign2 = {
+	scene: {
+		width: 1920,
+		height: 1080,
+	},
+	blocks: [
+		{
+			type: BLOCK_TYPE.image,
+			name: "bg",
+			version: "",
+			props: {
+				src: `${assetsPrefixUrl}bg.png`,
+				x: 0,
+				y: 0,
+				width: 1920,
+				height: 1080,
+				opacity: 1,
+				zIndex: 0,
+			},
+		},
+		{
+			type: BLOCK_TYPE.video,
+			name: "bg",
+			version: "",
+			props: {
+				src: `${assetsPrefixUrl}video_high.mp4`,
+				isMainVideo: true,
+				x: 1920 - 1920 * 0.64 - 12,
+				y: 12,
+				width: 1920 * 0.64,
+				height: 1080 * 0.64,
+				opacity: 0,
+				zIndex: 1,
+				animations: [
+					{
+						property: PROPERTY.opacity,
+						endValue: 1,
+						startTime: 400,
+						duration: 300,
+					},
+				],
+			},
+		},
+		{
+			type: BLOCK_TYPE.image,
+			name: "bg",
+			version: "",
+			props: {
+				src: `${assetsPrefixUrl}car.png`,
+				x: 15,
+				y: 540,
+				width: 1075 * 0.95,
+				height: 513 * 0.95,
+				opacity: 0,
+				zIndex: 2,
+				animations: [
+					{
+						property: PROPERTY.opacity,
+						endValue: 1,
+						startTime: 400,
+						duration: 300,
+					},
+				],
+			},
+		},
+		{
+			type: BLOCK_TYPE.image,
+			name: "bg",
+			version: "",
+			props: {
+				src: `${assetsPrefixUrl}logo.png`,
+				x: 110,
+				y: 100,
+				width: 416 * 1,
+				height: 79 * 1,
+				opacity: 0,
+				zIndex: 3,
+				animations: [
+					{
+						property: PROPERTY.opacity,
+						endValue: 1,
+						startTime: 1200,
+						duration: 1500,
+					},
+				],
+			},
+		},
+		{
+			type: BLOCK_TYPE.image,
+			name: "bg",
+			version: "",
+			props: {
+				src: `${assetsPrefixUrl}claim.png`,
+				x: 110,
+				y: 200,
+				width: 440 * 1,
+				height: 117 * 1,
+				opacity: 0,
+				zIndex: 4,
+				animations: [
+					{
+						property: PROPERTY.opacity,
+						endValue: 1,
+						startTime: 1600,
+						duration: 1500,
+					},
+				],
+			},
+		},
+		{
+			type: BLOCK_TYPE.image,
+			name: "bg",
+			version: "",
+			props: {
+				src: `${assetsPrefixUrl}cta.png`,
+				x: 110,
+				y: 370,
+				width: 442 * 1,
+				height: 76 * 1,
+				opacity: 0,
+				zIndex: 5,
+				animations: [
+					{
+						property: PROPERTY.opacity,
+						startValue: 0,
+						endValue: 1,
+						startTime: 2000,
+						duration: 1500,
+					},
+				],
+			},
+		},
+		{
+			type: BLOCK_TYPE.rectangle,
+			name: "rectangle",
+			version: "",
+			props: {
+				x: 1555,
+				y: 855,
+				width: 200,
+				height: 110,
+				regX: 0.5,
+				regY: 0.5,
+				opacity: 1,
+				scale: 0,
+				zIndex: 6,
+				fill: "blue",
+				stroke: "white",
+				lineWidth: 10,
+				animations: [
+					{
+						property: PROPERTY.scale,
+						endValue: 1,
+						startTime: 2400,
+						duration: 300,
+					},
+					{
+						property: PROPERTY.scale,
+						endValue: 0.1,
+						startTime: 2700,
+						duration: 300,
+						count: Infinity,
+						repeatDelay: 300,
+					},
+					{
+						property: PROPERTY.scale,
+						endValue: 1,
+						startTime: 3000,
+						duration: 300,
+						count: Infinity,
+						repeatDelay: 300,
+					},
+				],
+			},
+		},
+		// {
+		// 	type: ASSET_TYPE.text,
+		// 	fontUrl: `url(${assetsPrefixUrl}AlpineProto-Bold-LGC.ttf)`,
+		// 	text: "Buy me!",
+		// 	fontSize: 83,
+		// 	fontColor: "white",
+		// 	textAlign: TEXT_ALIGN.center,
+		// 	x: 1370,
+		// 	y: 555,
+		// },
+		// {
+		// 	type: ASSET_TYPE.text,
+		// 	text: "Buy me!",
+		// 	fontSize: 83,
+		// 	fontColor: "white",
+		// 	textAlign: TEXT_ALIGN.center,
+		// 	x: 370,
+		// 	y: 555,
+		// },
+	],
+};

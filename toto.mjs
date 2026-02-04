@@ -35,13 +35,16 @@ export class MyCreative {
 		this.mainVideo.playsInline = true;
 
 		// debugging
-		document.body.appendChild(this.mainVideo);
+		// document.body.appendChild(this.mainVideo);
 
 		this.setupCanvas();
 	}
 
 	setupCanvas = () => {
 		this.canvas = document.createElement("canvas");
+		// this.canvas.style.width = "100%";
+		this.canvas.style.transform = "scale(.3)";
+		this.canvas.style.transformOrigin = "top left";
 		document.body.appendChild(this.canvas);
 
 		const ctx = this.canvas.getContext("2d");
@@ -131,6 +134,7 @@ export class MyCreative {
 
 		// Setup main video
 		this.mainVideo.src = mainVideoBlock.props.src;
+		this.mainVideo.onended = () => this.mediaRecorder.stop();
 		await this.mainVideo.play(); // start immediately
 
 		// Create audio context for mixing
@@ -206,8 +210,8 @@ export class MyCreative {
 		);
 
 		// Use mixed audio instead of just main video
-		const canvasStream = this.canvas.captureStream(30); // 30 FPS
-		console.log("Canvas stream created at 30 FPS");
+		const canvasStream = this.canvas.captureStream(); // do not force any FPS
+		console.log("Canvas stream created");
 		const mixedAudioTrack =
 			this.audioDestination.stream.getAudioTracks()[0];
 		canvasStream.addTrack(mixedAudioTrack);

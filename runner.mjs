@@ -3,6 +3,7 @@ import { writeFileSync, readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { PROPERTY, BLOCK_TYPE, EASING } from "./types.mjs";
+import { campaignAlpine } from "./campaigns/data-Alpine.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -118,27 +119,4 @@ async function runCreative(campaignConfig, recordDurationMs = 5000) {
 	console.log("Done!");
 }
 
-const campaign = {
-	scene: {
-		width: 1920,
-		height: 1080,
-	},
-	blocks: [
-		{
-			type: BLOCK_TYPE.video,
-			name: "video",
-			props: {
-				src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-				isMainVideo: true,
-				x: 0,
-				y: 0,
-				width: 1920,
-				height: 1080,
-				opacity: 1,
-				zIndex: 0,
-			},
-		},
-	],
-};
-
-runCreative(campaign, 5000).catch(console.error);
+runCreative(campaignAlpine, 50000).catch(console.error);
