@@ -1,8 +1,7 @@
 import puppeteer from "puppeteer";
-import { writeFileSync, readFileSync } from "fs";
+import { writeFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import { PROPERTY, BLOCK_TYPE, EASING } from "./types.mjs";
 import { campaignAlpine } from "./campaigns/data-Alpine.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -52,7 +51,7 @@ async function runCreative(campaignConfig, recordDurationMs = 5000) {
     </head>
     <body>
       <script type="module">
-        import { MyCreative } from './toto.mjs';
+        import { MyCreative } from './creative.mjs';
         
         const campaign = ${JSON.stringify(campaignConfig)};
         const recordDuration = ${recordDurationMs};
