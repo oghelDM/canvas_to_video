@@ -3,6 +3,10 @@ import { writeFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { campaignAlpine } from "./campaigns/data-Alpine.mjs";
+import { campaignMultiVideos } from "./campaigns/data-muti-videos.mjs";
+import { campaignParticles } from "./campaigns/data-particles.mjs";
+import { campaignAsics } from "./campaigns/data-Asics.mjs";
+import { campaignShape } from "./campaigns/data-shape.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -125,4 +129,9 @@ async function runCreative(campaignConfig, recordDurationMs = 5000) {
 	console.log("Done!");
 }
 
-runCreative(campaignAlpine, 50000).catch(console.error);
+// campaignAlpine
+// campaignMultiVideos
+// campaignParticles nor working
+// campaignAsics
+// campaignShape
+runCreative(campaignShape, 60000).catch(console.error);

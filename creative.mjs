@@ -101,6 +101,7 @@ export class MyCreative {
 		this.canvas.height = campaign.scene.height;
 
 		this.campaign = campaign;
+		this.setupAnimations(campaign);
 		const { blocks } = campaign;
 
 		// Load images
@@ -236,8 +237,6 @@ export class MyCreative {
 				}),
 		);
 		fonts.forEach((font) => document.fonts.add(font));
-
-		// In setupCampaign, replace the MediaRecorder section with:
 
 		console.log("Setting up MediaRecorder...");
 		console.log("Canvas stream tracks:", canvasStream.getTracks());

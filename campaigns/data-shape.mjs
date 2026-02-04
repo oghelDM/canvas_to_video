@@ -1,9 +1,10 @@
 import { BLOCK_TYPE, EASING, PROPERTY } from "../types.mjs";
 
 const assetsPrefixUrl =
+	// "https://statics.dmcdn.net/d/PRODUCTION/2025/POC_CanvasToVideo/assets/";
 	"https://statics.dmcdn.net/d/PRODUCTION/2025/POC_CanvasToVideo/assets/alpine/";
 
-export const campaign2 = {
+export const campaignShape = {
 	scene: {
 		width: 1920,
 		height: 1080,
@@ -164,7 +165,7 @@ export const campaign2 = {
 						endValue: 0.1,
 						startTime: 2700,
 						duration: 300,
-						count: Infinity,
+						count: 100,
 						repeatDelay: 300,
 					},
 					{
@@ -172,30 +173,11 @@ export const campaign2 = {
 						endValue: 1,
 						startTime: 3000,
 						duration: 300,
-						count: Infinity,
+						count: 100,
 						repeatDelay: 300,
 					},
 				],
 			},
 		},
-		// {
-		// 	type: ASSET_TYPE.text,
-		// 	fontUrl: `url(${assetsPrefixUrl}AlpineProto-Bold-LGC.ttf)`,
-		// 	text: "Buy me!",
-		// 	fontSize: 83,
-		// 	fontColor: "white",
-		// 	textAlign: TEXT_ALIGN.center,
-		// 	x: 1370,
-		// 	y: 555,
-		// },
-		// {
-		// 	type: ASSET_TYPE.text,
-		// 	text: "Buy me!",
-		// 	fontSize: 83,
-		// 	fontColor: "white",
-		// 	textAlign: TEXT_ALIGN.center,
-		// 	x: 370,
-		// 	y: 555,
-		// },
 	],
 };
